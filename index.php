@@ -88,6 +88,9 @@ if ($handle = opendir('./PDF')) {
 }
 ?>
 </ul>
+<h2>Estadísticas</h2>
+<a href="./estadisticas.php">Ir a estadísticas</a>
+<hr />
 <div><form action="./" method="GET">Ir a fecha [año-mes-día]:<input type="input" name="fecha" value="<?php echo date("Y-m-d"); ?>"/><input type="submit" value="Ir" /></form>
 <p>Promedio esperado para días <?php echo $dia; ?>: <b>$<?php echo $promedio; ?></b></p>
 <p>Mínimo historico en días <?php echo $dia; ?>: <b>$<?php echo $minimo; ?></b></p>
