@@ -178,10 +178,10 @@ while ($f = mysql_fetch_assoc($r)) {
 </td><td>
 <?php
 $cuerpo_tabla = "";
-$dbh = ibase_connect("192.168.1.104:C:\Program Files\P&CMicros\Database\ZoneSystems.gdb", "SYSDBA", "masterke");
+$dbh = @ibase_connect("192.168.1.104:C:\Program Files\P&CMicros\Database\ZoneSystems.gdb", "SYSDBA", "masterke");
+if ($dbh){
 $stmt = "SELECT CAST(a.GAME_TIMESTAMP AS TIME) AS \"hora\", a.EVENT_TYPE, a.GAME_ID, a.PROFILE_DESCRIPTION, a.DATA_1, a.DATA_2, a.DATA_3, a.DATA_4, a.DATA_5
 FROM T2GAMELOG a WHERE DATA_4 > 0 AND CAST(a.GAME_TIMESTAMP AS DATE) = CAST('".$fecha_sql."' AS DATE) AND EVENT_TYPE=3";
-
 $sth = ibase_query($dbh, $stmt);
 
 while ($f = ibase_fetch_assoc($sth))
@@ -194,14 +194,14 @@ while ($f = ibase_fetch_assoc($sth))
     <tr><th>Jugadores</th><th>Hora</th><th>Duración</th><th>En línea</th></tr>
     <?php echo $cuerpo_tabla; ?>
 </table>
+<?php } ?>
 </td></tr></table>
 <br />
 <?php
+if (Ping('192.168.1.104') == 'Encendida' && $dbh){
 $cuerpo_tabla = "";
-$dbh = ibase_connect("192.168.1.104:C:\Program Files\P&CMicros\Database\ZoneSystems.gdb", "SYSDBA", "masterke");
 $stmt = "SELECT CAST(a.GAME_TIMESTAMP AS TIME) AS \"hora\", a.EVENT_TYPE, a.GAME_ID, a.PROFILE_DESCRIPTION, a.DATA_1, a.DATA_2, a.DATA_3, a.DATA_4, a.DATA_5
 FROM T2GAMELOG a WHERE DATA_4 > 0 AND CAST(a.GAME_TIMESTAMP AS DATE) = CAST('".$fecha_sql."' AS DATE) AND EVENT_TYPE=1";
-
 $sth = ibase_query($dbh, $stmt);
 
 while ($f = ibase_fetch_assoc($sth))
@@ -221,6 +221,7 @@ $c = "SELECT COUNT(*) AS 'vendidos', DATE_FORMAT(`fecha_juego`,'%H:%i') AS 'hora
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
     $cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td></tr>",$f["hora"],$f["vendidos"]);
+}
 }
 ?>
 <h2>Pases generados</h2>
