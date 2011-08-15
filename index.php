@@ -244,17 +244,18 @@ DATE_FORMAT(`pase_razon`.`fechatiempo`,'%H:%i') AS 'hora',
 `pase_razon`.`precio`,
 `pase_razon`.`caducidad`,
 `pase_razon`.`ID_usuario`,
+`pase_razon`.`pase_dias_valido`,
 `usuarios`.`nombre`
 FROM `pase_razon` LEFT JOIN `usuarios` USING(ID_usuario)
 WHERE DATE(fechatiempo) = '$fecha_sql'";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
-    $cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["razon"],$f["cantidad"],$f["precio"],$f["caducidad"],$f["nombre"]);
+    $cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["razon"],$f["cantidad"],$f["precio"],$f["pase_dias_valido"],$f["caducidad"],$f["nombre"]);
 }
 ?>
 <h2>Motivo de generacion de pases
 <table>
-    <tr><th>Hora</th><th>Razón</th><th>Cantidad</th><th>Precio c/u</th><th>Caducidad</th><th>Cajero</th></tr>
+    <tr><th>Hora</th><th>Razón</th><th>Cantidad</th><th>Precio c/u</th><th>Días válidos</th><th>Caducidad</th><th>Cajero</th></tr>
     <?php echo $cuerpo_tabla; ?>
 </table>
 <br />
