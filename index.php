@@ -220,6 +220,7 @@ while ($f = ibase_fetch_assoc($sth))
     <tr><th>Hora</th><th>Segundos para terminar</th><th>Duración</th><th>En línea</th></tr>
     <?php echo $cuerpo_tabla; ?>
 </table>
+<?php } ?>
 <br />
 <?php
 $cuerpo_tabla = "";
@@ -227,7 +228,6 @@ $c = "SELECT COUNT(*) AS 'vendidos', DATE_FORMAT(`fecha_juego`,'%H:%i') AS 'hora
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
     $cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td></tr>",$f["hora"],$f["vendidos"]);
-}
 }
 ?>
 <h2>Pases generados</h2>
