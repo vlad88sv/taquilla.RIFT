@@ -223,7 +223,7 @@ while ($f = ibase_fetch_assoc($sth))
 <br />
 <?php
 $cuerpo_tabla = "";
-$c = "SELECT COUNT(*) AS 'vendidos', DATE_FORMAT(`fecha_juego`,'%H:%i') AS 'hora' FROM `tickets` WHERE `tickets`.`ID_tipo_boleto` = 11 AND DATE(`fecha_juego`) = '".$fecha_sql."' GROUP BY DATE_FORMAT(`fecha_juego`,'%H:%i') ORDER BY DATE_FORMAT(`fecha_juego`,'%H:%i') ASC, `numero_jugador` ASC ";
+$c = "SELECT COUNT(*) AS 'vendidos', DATE_FORMAT(`fecha_juego`,'%H:%i') AS 'hora' FROM `tickets` WHERE `tickets`.`ID_tipo_boleto` = 11 AND DATE(`fecha_juego`) = '".$fecha_sql."' GROUP BY DATE_FORMAT(`fecha_juego`,'%H:%i') ORDER BY DATE_FORMAT(`fecha_juego`,'%H:%i') ASC";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
     $cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td></tr>",$f["hora"],$f["vendidos"]);
