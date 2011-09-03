@@ -103,14 +103,14 @@ if ($handle = opendir('./PDF')) {
 <p>Máximo historico en días <?php echo $dia; ?>: <b>$<?php echo $maximo; ?></b></p>
 <hr />
 <?php
-$c = "SELECT FORMAT((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."') + COALESCE(SUM(precio_grabado),0)+COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `eventos` WHERE DATE(`eventos`.`fecha_vendido`)= '".$fecha_sql."'),0),2) AS total FROM tickets WHERE DATE(fecha_vendido) =  '".$fecha_sql."'";
+$c = "SELECT FORMAT((SELECT COALESCE(SUM(precio_grabado*cantidad),0) FROM `cafeteria_transacciones` WHERE DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."') + COALESCE(SUM(precio_grabado),0)+COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `eventos` WHERE DATE(`eventos`.`fecha_vendido`)= '".$fecha_sql."'),0),2) AS total FROM tickets WHERE DATE(fecha_vendido) =  '".$fecha_sql."'";
 $r = db_consultar($c);
 $f = mysql_fetch_assoc($r);
 ?>
 <p>Dinero en caja + bouchers: <b>$<?php echo $f['total']; ?></b></p>
 <p class="diminuto">"Total t" es la suma del ingreso registrado en el dia.</p>
 <?php
-$c = "SELECT FORMAT((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."') + COALESCE(SUM(precio_grabado),0)+COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `eventos` WHERE DATE(`eventos`.`fecha_evento`)= '".$fecha_sql."'),0),2) AS total FROM tickets WHERE DATE(fecha_juego) =  '".$fecha_sql."'";
+$c = "SELECT FORMAT((SELECT COALESCE(SUM(precio_grabado*cantidad),0) FROM `cafeteria_transacciones` WHERE DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."') + COALESCE(SUM(precio_grabado),0)+COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `eventos` WHERE DATE(`eventos`.`fecha_evento`)= '".$fecha_sql."'),0),2) AS total FROM tickets WHERE DATE(fecha_juego) =  '".$fecha_sql."'";
 $r = db_consultar($c);
 $f = mysql_fetch_assoc($r)
 ?>
@@ -195,7 +195,7 @@ $sth = ibase_query($dbh, $stmt);
 
 while ($f = ibase_fetch_assoc($sth))
 {
-	$cuerpo_tabla .= sprintf("<tr><td>%s</td><td class='hora'>%s</td><td>%s</td><td>%s</td></tr>",$f["DATA_4"],$f["hora"],(($f["DATA_1"]) / 60)."m",$f["DATA_2"]);
+	$cuerpo_tabla .= sprintf("<tr><td>%s</td><td class='hora'>%s</td><td>%s</td><td>%s</td></tr>",$f["DATA_4"],$f["hora"],(($f["DATA_1"]) / 60)."m",'<a href="./jugadores.php?gi='.$f["GAME_ID"].'">'.$f["DATA_2"].'</a>');
 }
 ?>
 <h2>LOG</h2>
@@ -215,7 +215,7 @@ $sth = ibase_query($dbh, $stmt);
 
 while ($f = ibase_fetch_assoc($sth))
 {
-	$cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["DATA_4"],(($f["DATA_1"]) / 60)."m",$f["DATA_2"]);
+	$cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["DATA_4"],(($f["DATA_1"]) / 60)."m",'<a href="./jugadores.php?gi='.$f["GAME_ID"].'">'.$f["DATA_2"].'</a>');
 }
 ?>
 <h2>LOG [Abortados]</h2>
