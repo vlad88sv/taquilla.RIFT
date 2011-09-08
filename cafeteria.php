@@ -26,17 +26,17 @@ $fecha_sql = (!isset($_GET['fecha']) ? mysql_date() : $_GET['fecha']);
 <body>
 <?php
 $t = 'Ventas de cafeteria';
-$c = "SELECT ID_transaccion, ID_ticket, (precio_grabado*cantidad) AS precio_total, precio_grabado, DATE_FORMAT(fecha, '%r') AS hora, descripcion, cantidad FROM  `cafeteria_transacciones` LEFT JOIN  `cafeteria_articulos` USING ( ID_articulo ) WHERE DATE(fecha) ='".$fecha_sql."' AND cantidad > 0 ORDER BY ID_transaccion ASC";
+$c = "SELECT ID_transaccion, ID_ticket, (precio_grabado*cantidad) AS precio_total, precio_grabado, DATE_FORMAT(fecha, '%r') AS hora, descripcion, cantidad, cancelado FROM  `cafeteria_transacciones` LEFT JOIN  `cafeteria_articulos` USING ( ID_articulo ) WHERE DATE(fecha) ='".$fecha_sql."' AND cantidad > 0 ORDER BY ID_transaccion ASC";
 CrearTablaManual($c,$t);
 
 function CrearTablaManual($c, $t) {
     $r = db_consultar($c);
     echo "<h2>$t</h2>";
     echo "<table>";
-    echo "<tr><th>Hora</th><th>Descripción</th><th>Cantidad</th><th>Precio unitario</th><th>Total compra</th></tr>";
+    echo "<tr><th>Hora</th><th>Descripción</th><th>Cantidad</th><th>Precio unitario</th><th>Total compra</th><th>Cancelado</th></tr>";
     while($f = mysql_fetch_assoc($r))
     {
-        echo sprintf('<tr><td class="hora">%s</td><td>%s</td><td>%s</td><td>$%s</td><td>$%s</td></tr>',$f["hora"],$f["descripcion"],$f["cantidad"],$f["precio_grabado"],$f["precio_total"]);
+        echo sprintf('<tr><td class="hora">%s</td><td>%s</td><td>%s</td><td>$%s</td><td>$%s</td><td>%s</td></tr>',$f["hora"],$f["descripcion"],$f["cantidad"],$f["precio_grabado"],$f["precio_total"],($f["cancelado"] == 0 ? "No" : "Si"));
     }
     echo "<table>";
 }
