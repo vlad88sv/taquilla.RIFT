@@ -2,6 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 require_once("php/vital.php");
+$fecha_sql = (!isset($_GET['fecha']) ? mysql_date() : $_GET['fecha']);
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
 <head>
@@ -24,6 +25,21 @@ require_once("php/vital.php");
 </head>
 <body>
 <?php
+// Obtengamos el promedio esperado para este día
+$c = "SELECT DATE_FORMAT('".$fecha_sql."','%W') AS dia, FORMAT(AVG(total),2) AS promedio, FORMAT(MIN(total),2) AS minimo, FORMAT(MAX(total),2) AS maximo FROM (SELECT SUM(COALESCE(precio_grabado,0)) + (SELECT COALESCE(SUM(precio_evento+precio_cafeteria+precio_comida),0) FROM eventos WHERE DATE(eventos.fecha_evento)=DATE(tickets.fecha_juego)) + (COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE DATE(`cafeteria_transacciones`.`fecha`) = DATE(tickets.fecha_juego)),0)) AS total FROM tickets WHERE tickets.ID_tipo_boleto NOT IN (2,3,4) AND tickets.fecha_juego<DATE(NOW()) AND DATE_FORMAT(tickets.fecha_juego,'%w')=DATE_FORMAT('".$fecha_sql."','%w') GROUP BY DATE(fecha_juego)) AS sub";
+$r = db_consultar($c);
+$f = mysql_fetch_assoc($r);
+$promedio = $f['promedio'];
+$minimo = $f['minimo'];
+$maximo = $f['maximo'];
+$dia = $f['dia'];
+?>
+<p>Promedio esperado para días <?php echo $dia; ?>: <b>$<?php echo $promedio; ?></b></p>
+<p>Mínimo historico en días <?php echo $dia; ?>: <b>$<?php echo $minimo; ?></b></p>
+<p>Máximo historico en días <?php echo $dia; ?>: <b>$<?php echo $maximo; ?></b></p>
+<hr />
+<?php
+
 $t = 'Venta por día (Lu..Do)';
 $c = "SELECT DATE_FORMAT(fecha_vendido,'%W') AS col1, COUNT(*) AS col2, COALESCE(SUM(precio_grabado),0) + (SELECT COALESCE(SUM(precio_evento+precio_cafeteria+precio_comida),0) FROM eventos WHERE DATE_FORMAT(eventos.fecha_vendido,'%w')=DATE_FORMAT(tickets.fecha_vendido,'%w')) AS col3 FROM tickets GROUP BY DATE_FORMAT(fecha_vendido,'%w') ORDER BY col3 DESC";
 CrearTablaEstadistica($c,$t);

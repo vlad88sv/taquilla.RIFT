@@ -20,7 +20,7 @@ for ($ii=0;$ii<65;$ii++)
 }
 
 // Obtengamos los tiquetes vendidos
-$c = "SELECT COUNT(*) AS 'vendidos', DATE(`fecha_juego`) AS 'fecha', DATE_FORMAT(`fecha_juego`,'%H:%i') AS `hora` FROM `tickets` LEFT JOIN `tipo_boleto` USING(`ID_tipo_boleto`) WHERE `tickets`.`ID_tipo_boleto` <> 11 AND DATE(`fecha_juego`) = '".$fecha_sql."' GROUP BY `fecha_juego` ORDER BY `fecha_juego` ASC, `numero_jugador` ASC ";
+$c = "SELECT COUNT(*) AS 'vendidos', DATE(`fecha_juego`) AS 'fecha', DATE_FORMAT(`fecha_juego`,'%H:%i') AS `hora` FROM `tickets` LEFT JOIN `tipo_boleto` USING(`ID_tipo_boleto`) WHERE `tickets`.`ID_tipo_boleto` <> 2 AND `tickets`.`ID_tipo_boleto` <> 3 AND `tickets`.`ID_tipo_boleto` <> 4 AND `tickets`.`ID_tipo_boleto` <> 11 AND `fecha_juego` BETWEEN '".$fecha_sql." 00:00:00' AND '".$fecha_sql." 23:59:59' GROUP BY `fecha_juego` ORDER BY `fecha_juego` ASC, `numero_jugador` ASC ";
 
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
@@ -44,15 +44,6 @@ foreach ($pos as $hora => $jugadores)
 	if ($jugadores > 0)
 		$cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td></tr>", $hora, $jugadores);
 }
-
-// Obtengamos el promedio esperado para este día
-$c = "SELECT DATE_FORMAT('".$fecha_sql."','%W') AS dia, FORMAT(AVG(total),2) AS promedio, FORMAT(MIN(total),2) AS minimo, FORMAT(MAX(total),2) AS maximo FROM (SELECT SUM(COALESCE(precio_grabado,0)) + (SELECT COALESCE(SUM(precio_evento+precio_cafeteria+precio_comida),0) FROM eventos WHERE DATE(eventos.fecha_evento)=DATE(tickets.fecha_juego)) + (COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE DATE(`cafeteria_transacciones`.`fecha`) = DATE(tickets.fecha_juego)),0)) AS total FROM tickets WHERE tickets.fecha_juego<DATE(NOW()) AND DATE_FORMAT(tickets.fecha_juego,'%w')=DATE_FORMAT('".$fecha_sql."','%w') GROUP BY DATE(fecha_juego)) AS sub";
-$r = db_consultar($c);
-$f = mysql_fetch_assoc($r);
-$promedio = $f['promedio'];
-$minimo = $f['minimo'];
-$maximo = $f['maximo'];
-$dia = $f['dia'];
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
 <head>
@@ -74,7 +65,7 @@ $dia = $f['dia'];
     </style>
 </head>
 <h1>RIFT - Taquilla | <?php echo $fecha_sql; ?></h1>
-<p>Conectado a <b><?php echo db__host; ?></b></p>
+<div><form action="./" method="GET">Ir a fecha [año-mes-día]:<input type="input" name="fecha" value="<?php echo $fecha_sql; ?>"/><input type="submit" value="Ir" /></form>
 <h2>Cortes</h2>
 <ul>
 <?php
@@ -88,35 +79,36 @@ if ($handle = opendir('./PDF')) {
 }
 ?>
 </ul>
-<h2>Estadísticas</h2>
-<a href="./estadisticas.php">Ir a estadísticas</a>
 <hr />
-<h2>Compras</h2>
-<a href="./compras.php?fecha=<?php echo $fecha_sql; ?>">Ir a compras</a>
-<hr />
-<h2>Cafetería</h2>
-<a href="./cafeteria.php?fecha=<?php echo $fecha_sql; ?>">Ir a ventas de cafetería</a>
-<hr />
-<div><form action="./" method="GET">Ir a fecha [año-mes-día]:<input type="input" name="fecha" value="<?php echo date("Y-m-d"); ?>"/><input type="submit" value="Ir" /></form>
-<p>Promedio esperado para días <?php echo $dia; ?>: <b>$<?php echo $promedio; ?></b></p>
-<p>Mínimo historico en días <?php echo $dia; ?>: <b>$<?php echo $minimo; ?></b></p>
-<p>Máximo historico en días <?php echo $dia; ?>: <b>$<?php echo $maximo; ?></b></p>
+<h2>Herramientas</h2>
+<ul>
+<li><a href="./estadisticas.php?fecha=<?php echo $fecha_sql; ?>">Estadísticas</a></li>
+<li><a href="./compras.php?fecha=<?php echo $fecha_sql; ?>">Detalle de compras</a></li>
+<li><a href="./cafeteria.php?fecha=<?php echo $fecha_sql; ?>">Ventas de cafetería</a></li>
+<li><a href="./pases.php?fecha=<?php echo $fecha_sql; ?>">Rastrear pases</a></li>
+<li><a href="./movimientos.php?fecha=<?php echo $fecha_sql; ?>">Rastrear movimientos</a></li>
+</ul>
 <hr />
 <?php
-$c = "SELECT FORMAT((SELECT COALESCE(SUM(precio_grabado*cantidad),0) FROM `cafeteria_transacciones` WHERE `cafeteria_transacciones`.`cancelado`=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."') + COALESCE(SUM(precio_grabado),0)+COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `eventos` WHERE DATE(`eventos`.`fecha_vendido`)= '".$fecha_sql."'),0),2) AS total FROM tickets WHERE DATE(fecha_vendido) =  '".$fecha_sql."'";
+$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE ID_tipo_boleto NOT IN (2,3,4) AND DATE(fecha_vendido) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_vendido`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
 $r = db_consultar($c);
 $f = mysql_fetch_assoc($r);
 ?>
-<p>Dinero en caja + bouchers: <b>$<?php echo $f['total']; ?></b></p>
+
+<p>Dinero en caja + bouchers: <b>$<?php echo number_format($f['totalCafeteria'] + $f['totalJuegos'] + $f['totalEventos'],2,'.',','); ?></b></p>
+<p class="diminuto"><strong>Total [JUEGO]</strong> $<?php echo $f['totalJuegos']; ?></p>
+<p class="diminuto"><strong>Total [EVENTOS]</strong> $<?php echo $f['totalEventos']; ?></p>
+<p class="diminuto"><strong>Total [CAFETERIA]</strong> $<?php echo $f['totalCafeteria']; ?></p>
 <p class="diminuto">"Total t" es la suma del ingreso registrado en el dia.</p>
+<hr />
 <?php
-$c = "SELECT FORMAT((SELECT COALESCE(SUM(precio_grabado*cantidad),0) FROM `cafeteria_transacciones` WHERE `cafeteria_transacciones`.`cancelado`=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."') + COALESCE(SUM(precio_grabado),0)+COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `eventos` WHERE DATE(`eventos`.`fecha_evento`)= '".$fecha_sql."'),0),2) AS total FROM tickets WHERE DATE(fecha_juego) =  '".$fecha_sql."'";
+$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE ID_tipo_boleto NOT IN (2,3,4) AND DATE(fecha_juego) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_evento`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
 $r = db_consultar($c);
 $f = mysql_fetch_assoc($r)
 ?>
-<p>Dinero generado por juegos este día: <b>$<?php echo $f['total']; ?></b></p>
+<p>Dinero generado por juegos este día: <b>$<?php echo number_format($f['totalCafeteria'] + $f['totalJuegos'] + $f['totalEventos'],2,'.',','); ?></b></p>
 <p class="diminuto">"Total T" es la suma de ventas por juegos en este día.</p>
-<br />
+<hr />
 <?php
 $buffer_transacciones = '';
 $c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE DATE(fecha_vendido) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,precio_grabado,DATE(fecha_juego)) ORDER BY descripcion";
@@ -133,7 +125,7 @@ while ($f = mysql_fetch_assoc($r)) {
 <br />
 <?php
 $buffer_transacciones = '';
-$c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE DATE(fecha_juego) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,precio_grabado,DATE(fecha_juego)) ORDER BY descripcion";
+$c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE ID_tipo_boleto <> 11 AND DATE(fecha_juego) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,precio_grabado,DATE(fecha_juego)) ORDER BY descripcion";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
     $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td>'.$f["cuenta"].'</td></tr>';
@@ -215,7 +207,7 @@ $sth = ibase_query($dbh, $stmt);
 
 while ($f = ibase_fetch_assoc($sth))
 {
-	$cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["DATA_4"],(($f["DATA_1"]) / 60)."m",'<a href="./jugadores.php?gi='.$f["GAME_ID"].'">'.$f["DATA_2"].'</a>');
+	$cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["DATA_4"],(($f["DATA_1"]) / 60)."m",$f["DATA_2"]);
 }
 ?>
 <h2>LOG [Abortados]</h2>
