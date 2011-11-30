@@ -90,7 +90,7 @@ if ($handle = opendir('./PDF')) {
 </ul>
 <hr />
 <?php
-$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE ID_tipo_boleto NOT IN (2,3,4) AND DATE(fecha_vendido) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_vendido`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
+$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE DATE(fecha_vendido) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_vendido`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
 $r = db_consultar($c);
 $f = mysql_fetch_assoc($r);
 ?>
@@ -102,7 +102,7 @@ $f = mysql_fetch_assoc($r);
 <p class="diminuto">"Total t" es la suma del ingreso registrado en el dia.</p>
 <hr />
 <?php
-$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE ID_tipo_boleto NOT IN (2,3,4) AND DATE(fecha_juego) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_evento`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
+$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE AND DATE(fecha_juego) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_evento`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
 $r = db_consultar($c);
 $f = mysql_fetch_assoc($r)
 ?>
@@ -114,12 +114,12 @@ $buffer_transacciones = '';
 $c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE DATE(fecha_vendido) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,precio_grabado,DATE(fecha_juego)) ORDER BY descripcion";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
-    $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td><a href="http://taquilla.riftelsalvador.com/?fecha='.$f["fecha_juego2"].'">'.$f["fecha_juego2"].'</a></td><td>'.$f["cuenta"].'</td></tr>';
+    $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td><a href="http://rift.zapto.org:81/?fecha='.$f["fecha_juego2"].'">'.$f["fecha_juego2"].'</a></td><td>'.$f["cuenta"].'</td></tr>';
 }
 ?>
-<h2>Detalle tiquetes [vendido]</h2>
+<h2>Detalle tiquetes [IMPRESOS DURANTE ESTE DIA]</h2>
 <table>
-    <tr><th>Grupo</th><th>Precio</th><th>Fecha juego</th><th>Cantidad</th></tr>
+    <tr><th>Grupo</th><th>Precio</th><th>Para fecha de juego</th><th>Cantidad</th></tr>
     <?php echo $buffer_transacciones; ?>
 </table>
 <br />
@@ -131,7 +131,7 @@ while ($f = mysql_fetch_assoc($r)) {
     $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td>'.$f["cuenta"].'</td></tr>';
 }
 ?>
-<h2>Detalle tiquetes [jugado]</h2>
+<h2>Detalle tiquetes [PARA JUGAR ESTE DIA]</h2>
 <table>
     <tr><th>Grupo</th><th>Precio</th><th>Cantidad</th></tr>
     <?php echo $buffer_transacciones; ?>
