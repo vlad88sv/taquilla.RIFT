@@ -117,7 +117,7 @@ while ($f = mysql_fetch_assoc($r)) {
     $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td><a href="http://taquilla.riftelsalvador.com/?fecha='.$f["fecha_juego2"].'">'.$f["fecha_juego2"].'</a></td><td>'.$f["cuenta"].'</td></tr>';
 }
 ?>
-<h2>Detalle transacciones [vendido]</h2>
+<h2>Detalle tiquetes [vendido]</h2>
 <table>
     <tr><th>Grupo</th><th>Precio</th><th>Fecha juego</th><th>Cantidad</th></tr>
     <?php echo $buffer_transacciones; ?>
@@ -131,9 +131,23 @@ while ($f = mysql_fetch_assoc($r)) {
     $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td>'.$f["cuenta"].'</td></tr>';
 }
 ?>
-<h2>Detalle transacciones [jugado]</h2>
+<h2>Detalle tiquetes [jugado]</h2>
 <table>
     <tr><th>Grupo</th><th>Precio</th><th>Cantidad</th></tr>
+    <?php echo $buffer_transacciones; ?>
+</table>
+<br />
+<?php
+$buffer_transacciones = '';
+$c = "SELECT COUNT(*) AS 'cuenta', `tipo` FROM `transacciones` WHERE DATE(fecha) = '".$fecha_sql."' GROUP BY `tipo`";
+$r = db_consultar($c);
+while ($f = mysql_fetch_assoc($r)) {
+    $buffer_transacciones .= '<tr><td>'.$f["tipo"].'</td><td>'.$f["cuenta"].'</td></tr>';
+}
+?>
+<h2>Detalle transacciones</h2>
+<table>
+    <tr><th>Tipo</th><th>Cantidad</th></tr>
     <?php echo $buffer_transacciones; ?>
 </table>
 <br />
