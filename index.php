@@ -102,7 +102,7 @@ $f = mysql_fetch_assoc($r);
 <p class="diminuto">"Total t" es la suma del ingreso registrado en el dia.</p>
 <hr />
 <?php
-$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE AND DATE(fecha_juego) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_evento`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
+$c = "SELECT COALESCE((SELECT COALESCE(SUM(precio_grabado),0) FROM tickets WHERE DATE(fecha_juego) = '".$fecha_sql."'),0) AS totalJuegos,  COALESCE((SELECT SUM(`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) FROM `rift3`.`eventos` WHERE DATE(`eventos`.`fecha_evento`)='".$fecha_sql."'),0) AS totalEventos, COALESCE((SELECT SUM(precio_grabado*cantidad) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(`cafeteria_transacciones`.`fecha`) = '".$fecha_sql."'),0) AS totalCafeteria";
 $r = db_consultar($c);
 $f = mysql_fetch_assoc($r)
 ?>
