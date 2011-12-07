@@ -153,32 +153,32 @@ while ($f = mysql_fetch_assoc($r)) {
 <br />
 <?php
 $buffer_eventos = '';
-$c = "SELECT `patrocinado_por`, `fecha_evento`, `eventos`.`ID_evento`, (`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) AS precio_evento FROM `eventos` WHERE DATE(`eventos`.`fecha_vendido`)='".$fecha_sql."' ORDER BY `eventos`.`hora_inicio`";
+$c = "SELECT `patrocinado_por`, `fecha_evento`, `eventos`.`ID_evento`, (`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) AS precio_evento, infoContacto FROM `eventos` WHERE DATE(`eventos`.`fecha_vendido`)='".$fecha_sql."' ORDER BY `eventos`.`hora_inicio`";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
-    $buffer_eventos .= '<tr><td>'.$f["patrocinado_por"].'</td><td>$'.$f["precio_evento"].'</td><td>'.$f["fecha_evento"].'</td></tr>';
+    $buffer_eventos .= '<tr><td>'.$f["patrocinado_por"].'</td><td>$'.$f["precio_evento"].'</td><td>'.$f["fecha_evento"].'</td><td>'.$f["infoContacto"].'</td></tr>';
 }
 ?>
 <?php if(mysql_num_rows($r)): ?>
 <h2>Detalle eventos vendidos hoy</h2>
 <table>
-    <tr><th scope="Descripcion">Patrocinado por</th><th scope="Cantidad">Precio</th><th scope="Fecha">Fecha evento</th></tr>
+    <tr><th scope="Descripcion">Patrocinado por</th><th scope="Cantidad">Precio</th><th scope="Fecha">Fecha evento</th><th>Contacto</th></tr>
     <?php echo $buffer_eventos; ?>
 </table>
 <br />
 <?php endif; ?>
 <?php
 $buffer_eventos = '';
-$c = "SELECT hora_inicio, hora_final, `patrocinado_por`, `eventos`.`fecha_vendido`, `eventos`.`ID_evento`, (`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) AS precio_evento, (SELECT `nombre` FROM `usuarios` WHERE `ID_usuario`= `eventos`.`agregado_por_usuario`) AS 'nombre_usuario' FROM `eventos` WHERE DATE(`eventos`.`fecha_evento`)='".$fecha_sql."' ORDER BY `eventos`.`hora_inicio`";
+$c = "SELECT hora_inicio, hora_final, `patrocinado_por`, `eventos`.`fecha_vendido`, `eventos`.`ID_evento`, (`eventos`.`precio_evento` + `eventos`.`precio_comida` + `eventos`.`precio_cafeteria`) AS precio_evento, (SELECT `nombre` FROM `usuarios` WHERE `ID_usuario`= `eventos`.`agregado_por_usuario`) AS 'nombre_usuario', infoContacto FROM `eventos` WHERE DATE(`eventos`.`fecha_evento`)='".$fecha_sql."' ORDER BY `eventos`.`hora_inicio`";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
-    $buffer_eventos .= '<tr><td>'.$f["patrocinado_por"].'</td><td>$'.$f["precio_evento"].'</td><td>'.$f["fecha_vendido"].'</td><td>'.$f["nombre_usuario"].'</td><td>'.$f["hora_inicio"].'</td><td>'.$f["hora_final"].'</td></tr>';
+    $buffer_eventos .= '<tr><td>'.$f["patrocinado_por"].'</td><td>$'.$f["precio_evento"].'</td><td>'.$f["fecha_vendido"].'</td><td>'.$f["nombre_usuario"].'</td><td>'.$f["hora_inicio"].'</td><td>'.$f["hora_final"].'</td><td>'.$f["infoContacto"].'</td></tr>';
 }
 ?>
 <?php if(mysql_num_rows($r)): ?>
 <h2>Detalle eventos programados para hoy</h2>
 <table>
-    <tr><th scope="Descripcion">Patrocinado por</th><th scope="Cantidad">Precio</th><th scope="Fecha">Fecha vendido</th><th>Cajero</th><th>Hora inicio</th><th>Hora final</th></tr>
+    <tr><th scope="Descripcion">Patrocinado por</th><th scope="Cantidad">Precio</th><th scope="Fecha">Fecha vendido</th><th>Cajero</th><th>Hora inicio</th><th>Hora final</th><th>Contacto</th></tr>
     <?php echo $buffer_eventos; ?>
 </table>
 <br />
