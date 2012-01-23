@@ -45,7 +45,7 @@ $c = "SELECT DATE_FORMAT(fecha_vendido,'%W') AS col1, COUNT(*) AS col2, COALESCE
 CrearTablaEstadistica($c,$t);
 
 $t = 'Venta por mes';
-$c = "SELECT DATE_FORMAT(fecha_vendido,'%M') AS col1,COUNT(*) as col2, COALESCE(SUM(precio_grabado),0) + (SELECT COALESCE(SUM(precio_evento+precio_cafeteria+precio_comida),0) FROM eventos WHERE DATE_FORMAT(eventos.fecha_vendido,'%m')=DATE_FORMAT(tickets.fecha_vendido,'%m')) AS col3 FROM tickets GROUP BY DATE_FORMAT(fecha_vendido,'%m') ORDER BY col3 DESC";
+$c = "SELECT DATE_FORMAT(fecha_vendido,'%M/%y') AS col1,COUNT(*) as col2, COALESCE(SUM(precio_grabado),0) + (SELECT COALESCE(SUM(precio_evento+precio_cafeteria+precio_comida),0) FROM eventos WHERE DATE_FORMAT(eventos.fecha_vendido,'%m-%y')=DATE_FORMAT(tickets.fecha_vendido,'%m-%y')) AS col3 FROM tickets GROUP BY DATE_FORMAT(fecha_vendido,'%m-%y') ORDER BY col3 DESC";
 CrearTablaEstadistica($c,$t);
 
 $t = 'Venta por hora';
