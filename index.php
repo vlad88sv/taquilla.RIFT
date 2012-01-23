@@ -85,14 +85,8 @@ echo ' | <strong>Capturas de pantalla </strong> <a href="http://rift.zapto.org:8
 <h2>Cortes</h2>
 <ul>
 <?php
-if ($handle = opendir('./PDF')) {
-    while (false !== ($file = readdir($handle))) {
-        if ($file != "." && $file != ".." && preg_match("/CZ-".$fecha_sql."_.*/",$file)) {
-            echo '<li><a href="PDF/'.$file.'">'.$file.'</a></li>';
-        }
-    }
-    closedir($handle);
-}
+foreach (glob('PDF/CZ-'.$fecha_sql.'*') as $file)
+        echo '<li><a href="'.$file.'">'.$file.'</a></li>';
 ?>
 </ul>
 <hr />
