@@ -7,6 +7,8 @@ function Ping($host)
 	return strpos( shell_exec("ping -q -n -c1 $host"),'+1 errors') ? 'Apagada' : 'Encendida';
 }
 // Var
+$RIFT_server = Ping('192.168.1.104');
+$RIFT_encendida = ($RIFT_server == 'Encendida');
 $fecha_sql = (!isset($_GET['fecha']) ? mysql_date() : $_GET['fecha']);
 $cuerpo_tabla = "";
 $buffer = "";
@@ -64,6 +66,20 @@ foreach ($pos as $hora => $jugadores)
 		#contendor_tablas td{vertical-align:top;}
     </style>
 </head>
+<?php
+echo '<strong>Tiempo encendida</strong> ';
+$uptime = `cat /proc/uptime | awk '{ print $1}'`;
+echo floor($uptime / 86400). ' días - ';
+echo floor(($uptime % 86400) / 3600). ' horas - ';
+echo floor((($uptime % 86400) % 3600) / 60). ' minutos';
+echo ' | <strong>iNodes</strong> ';
+echo `df -i | grep sda1 | awk '{print $5}'`;
+echo ' | <strong>Blocks</strong> ';
+echo `df -h | grep sda1 | awk '{print $5}'`;
+echo ' | <strong>RIFT Server</strong> ';
+echo $RIFT_server;
+echo ' | <strong>Capturas de pantalla </strong> <a href="http://rift.zapto.org:81/SS/'.$fecha_sql.'">ver</a>';
+?>
 <h1>RIFT - Taquilla | <?php echo $fecha_sql; ?></h1>
 <div><form action="./" method="GET">Ir a fecha [año-mes-día]:<input type="input" name="fecha" value="<?php echo $fecha_sql; ?>"/><input type="submit" value="Ir" /></form>
 <h2>Cortes</h2>
@@ -111,7 +127,21 @@ $f = mysql_fetch_assoc($r)
 <hr />
 <?php
 $buffer_transacciones = '';
-$c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE DATE(fecha_vendido) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,precio_grabado,DATE(fecha_juego)) ORDER BY descripcion";
+$c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_vendido) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE DATE(fecha_juego) = '".$fecha_sql."' AND DATE(fecha_vendido) <> '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,'+',precio_grabado,'+',DATE(fecha_vendido))";
+$r = db_consultar($c);
+while ($f = mysql_fetch_assoc($r)) {
+    $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td><a href="http://rift.zapto.org:81/?fecha='.$f["fecha_juego2"].'">'.$f["fecha_juego2"].'</a></td><td>'.$f["cuenta"].'</td></tr>';
+}
+?>
+<h2>Detalle tiquetes para juegos hoy [IMPRESOS OTRO DIA]</h2>
+<table>
+    <tr><th>Grupo</th><th>Precio</th><th>Fecha de venta</th><th>Cantidad</th></tr>
+    <?php echo $buffer_transacciones; ?>
+</table>
+<hr />
+<?php
+$buffer_transacciones = '';
+$c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE DATE(fecha_vendido) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,'+',precio_grabado,'+',DATE(fecha_juego))";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
     $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td><a href="http://rift.zapto.org:81/?fecha='.$f["fecha_juego2"].'">'.$f["fecha_juego2"].'</a></td><td>'.$f["cuenta"].'</td></tr>';
@@ -125,7 +155,7 @@ while ($f = mysql_fetch_assoc($r)) {
 <br />
 <?php
 $buffer_transacciones = '';
-$c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE ID_tipo_boleto <> 11 AND DATE(fecha_juego) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,precio_grabado,DATE(fecha_juego)) ORDER BY descripcion";
+$c = "SELECT COUNT(*) AS 'cuenta', `descripcion`, precio_grabado, DATE(fecha_juego) AS fecha_juego2 FROM `tickets` LEFT JOIN `tipo_boleto` USING(ID_tipo_boleto) WHERE ID_tipo_boleto <> 11 AND DATE(fecha_juego) = '".$fecha_sql."' GROUP BY CONCAT(ID_tipo_boleto,'+',precio_grabado)";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
     $buffer_transacciones .= '<tr><td>'.$f["descripcion"].'</td><td>$'.$f["precio_grabado"].'</td><td>'.$f["cuenta"].'</td></tr>';
@@ -193,7 +223,11 @@ while ($f = mysql_fetch_assoc($r)) {
 </td><td>
 <?php
 $cuerpo_tabla = "";
-$dbh = @ibase_connect("192.168.1.104:C:\Program Files\P&CMicros\Database\ZoneSystems.gdb", "SYSDBA", "masterke");
+if ($RIFT_encendida)
+	$dbh = @ibase_connect("192.168.1.104:C:\Program Files\P&CMicros\Database\ZoneSystems.gdb", "SYSDBA", "masterke");
+else
+	$dbh = null;
+
 if ($dbh){
 $stmt = "SELECT CAST(a.GAME_TIMESTAMP AS TIME) AS \"hora\", a.EVENT_TYPE, a.GAME_ID, a.PROFILE_DESCRIPTION, a.DATA_1, a.DATA_2, a.DATA_3, a.DATA_4, a.DATA_5
 FROM T2GAMELOG a WHERE DATA_4 > 0 AND CAST(a.GAME_TIMESTAMP AS DATE) = CAST('".$fecha_sql."' AS DATE) AND EVENT_TYPE=3";
@@ -213,7 +247,7 @@ while ($f = ibase_fetch_assoc($sth))
 </td></tr></table>
 <br />
 <?php
-if (Ping('192.168.1.104') == 'Encendida' && $dbh){
+if ($dbh){
 $cuerpo_tabla = "";
 $stmt = "SELECT CAST(a.GAME_TIMESTAMP AS TIME) AS \"hora\", a.EVENT_TYPE, a.GAME_ID, a.PROFILE_DESCRIPTION, a.DATA_1, a.DATA_2, a.DATA_3, a.DATA_4, a.DATA_5
 FROM T2GAMELOG a WHERE DATA_4 > 0 AND CAST(a.GAME_TIMESTAMP AS DATE) = CAST('".$fecha_sql."' AS DATE) AND EVENT_TYPE=1";
