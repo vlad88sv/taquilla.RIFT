@@ -39,6 +39,13 @@ $dia = $f['dia'];
 <p>Máximo historico en días <?php echo $dia; ?>: <b>$<?php echo $maximo; ?></b></p>
 <hr />
 <?php
+$t = 'Desempeño cafetería - por producto';
+$c = "SELECT cafeteria_articulos.ID_articulo, cafeteria_articulos.codigo_barra, IF (descripcion IS NULL, '-producto removido-',descripcion) AS descripcion, SUM(cantidad) AS cantidad_vendida, SUM(cantidad*precio_grabado) AS total_vendido FROM cafeteria_transacciones LEFT JOIN cafeteria_articulos USING(ID_articulo) GROUP BY cafeteria_articulos.ID_articulo ORDER BY total_vendido DESC";
+CrearTabla(array('Código art.','Código barra','Descripcion','Cantidad','Total vendido'),$c,$t);
+
+$t = 'Desempeño cafetería - por mes';
+$c = "SELECT DATE_FORMAT(fecha,'%M/%y') AS mes, SUM(cantidad*precio_grabado) AS total_vendido FROM cafeteria_transacciones LEFT JOIN cafeteria_articulos USING(ID_articulo) GROUP BY DATE_FORMAT(fecha,'%m-%y') ORDER BY total_vendido DESC ";
+CrearTabla(array('Mes','Total vendido'),$c,$t);
 
 $t = 'Venta por día (Lu..Do)';
 $c = "SELECT DATE_FORMAT(fecha_vendido,'%W') AS col1, COUNT(*) AS col2, COALESCE(SUM(precio_grabado),0) + (SELECT COALESCE(SUM(precio_evento+precio_cafeteria+precio_comida),0) FROM eventos WHERE DATE_FORMAT(eventos.fecha_vendido,'%w')=DATE_FORMAT(tickets.fecha_vendido,'%w')) AS col3 FROM tickets GROUP BY DATE_FORMAT(fecha_vendido,'%w') ORDER BY col3 DESC";
@@ -57,15 +64,20 @@ $c = "SELECT DATE_FORMAT(fecha_vendido,'%W %e de %M de %Y') AS col1, COUNT(*) as
 CrearTablaEstadistica($c,$t);
 
 function CrearTablaEstadistica($c, $t) {
+    CrearTabla(array('Valor','Juegos vendidos','Total'),$c,$t);
+}
+
+function CrearTabla(array $columnas, $c, $t)
+{
     $r = db_consultar($c);
     echo "<h2>$t</h2>";
     echo "<table>";
-    echo "<tr><th>Valor</th><th>Juegos vendidos</th><th>Total</th></tr>";
+    echo "<tr><th>".implode('</th><th>',$columnas)."</th></tr>";
     while($f = mysql_fetch_assoc($r))
     {
-            echo sprintf('<tr><td>%s</td><td>%s</td><td>$%s</td></tr>',$f["col1"],$f["col2"],$f["col3"]);
+        echo "<tr><td>".implode('</td><td>',$f)."</td></tr>";
     }
-    echo "<table>";
+    echo "<table>";    
 }
 ?>
 </body>

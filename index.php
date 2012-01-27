@@ -63,7 +63,7 @@ foreach ($pos as $hora => $jugadores)
         .hora{font-weight:bolder;}
         .diminuto{font-size:smaller;color:#111;padding:0;margin:0;border:none;}
         h1, h2 {padding:1px;margin:1px;}
-		#contendor_tablas td{vertical-align:top;}
+	#contendor_tablas td{vertical-align:top;}
     </style>
 </head>
 <?php
@@ -91,12 +91,25 @@ foreach (glob('PDF/CZ-'.$fecha_sql.'*') as $file)
 </ul>
 <hr />
 <h2>Herramientas</h2>
+<?php
+$c = "SELECT COUNT(*) AS cantidad FROM `cafeteria_ingresos` WHERE DATE(`cafeteria_ingresos`.`fechatiempo`)='".$fecha_sql."'";
+$r = db_consultar($c);
+$fCompras = mysql_fetch_assoc($r);
+
+$c = "SELECT (SELECT COUNT(*) FROM `cafeteria_transacciones` WHERE cancelado=1 AND cantidad>0 AND DATE(fecha)='".$fecha_sql."') AS CantidadCancelado, (SELECT COUNT(*) FROM `cafeteria_transacciones` WHERE cancelado=0 AND DATE(fecha)='".$fecha_sql."') AS CantidadNoCancelado";
+$r = db_consultar($c);
+$fCafeteria = mysql_fetch_assoc($r);
+
+$c = 'SELECT COUNT(*) AS cantidad FROM tickets WHERE (ID_pase IN (SELECT ID_ticket FROM tickets WHERE ID_tipo_boleto=4) AND DATE(fecha_juego) = "'.$fecha_sql.'") OR (ID_ticket IN (SELECT ID_pase FROM tickets WHERE (ID_pase IN (SELECT ID_ticket FROM tickets WHERE ID_tipo_boleto=4) AND DATE(fecha_juego) = "'.$fecha_sql.'"))) ORDER BY fecha_vendido DESC';
+$r = db_consultar($c);
+$fMovimientos = mysql_fetch_assoc($r);
+?>
 <ul>
 <li><a href="./estadisticas.php?fecha=<?php echo $fecha_sql; ?>">Estadísticas</a></li>
-<li><a href="./compras.php?fecha=<?php echo $fecha_sql; ?>">Detalle de compras</a></li>
-<li><a href="./cafeteria.php?fecha=<?php echo $fecha_sql; ?>">Ventas de cafetería</a></li>
-<li><a href="./pases.php?fecha=<?php echo $fecha_sql; ?>">Rastrear pases</a></li>
-<li><a href="./movimientos.php?fecha=<?php echo $fecha_sql; ?>">Rastrear movimientos</a></li>
+<li><a href="./compras.php?fecha=<?php echo $fecha_sql; ?>">Detalle de compras</a> [<?php echo $fCompras['cantidad']; ?> compras ingresadas]</li>
+<li><a href="./cafeteria.php?fecha=<?php echo $fecha_sql; ?>">Ventas de cafetería</a> [<?php echo $fCafeteria['CantidadNoCancelado']; ?> productos vendidos, <?php echo $fCafeteria['CantidadCancelado']; ?> productos cancelados]</li>
+<li><a href="./movimientos.php?fecha=<?php echo $fecha_sql; ?>">Rastrear movimientos</a> [<?php echo $fMovimientos['cantidad']; ?> movimientos]</li>
+<li><a href="./perfil_pases.php">Editar perfiles de pase</a></li>
 </ul>
 <hr />
 <?php
@@ -106,9 +119,10 @@ $f = mysql_fetch_assoc($r);
 ?>
 
 <p>Dinero en caja + bouchers: <b>$<?php echo number_format($f['totalCafeteria'] + $f['totalJuegos'] + $f['totalEventos'],2,'.',','); ?></b></p>
-<p class="diminuto"><strong>Total [JUEGO]</strong> $<?php echo $f['totalJuegos']; ?></p>
-<p class="diminuto"><strong>Total [EVENTOS]</strong> $<?php echo $f['totalEventos']; ?></p>
-<p class="diminuto"><strong>Total [CAFETERIA]</strong> $<?php echo $f['totalCafeteria']; ?></p>
+<table>
+<tr><th>JUEGO</th><th>EVENTOS</th><th>CAFETERIA</th></tr>
+<tr><td>$<?php echo number_format($f['totalJuegos'],2); ?></td><td>$<?php echo number_format($f['totalEventos'],2); ?></td><td>$<?php echo number_format($f['totalCafeteria'],2); ?></td></tr>
+</table>
 <p class="diminuto">"Total t" es la suma del ingreso registrado en el dia.</p>
 <hr />
 <?php
@@ -285,17 +299,18 @@ DATE_FORMAT(`pase_razon`.`fechatiempo`,'%H:%i') AS 'hora',
 `pase_razon`.`caducidad`,
 `pase_razon`.`ID_usuario`,
 `pase_razon`.`pase_dias_valido`,
-`usuarios`.`nombre`
-FROM `pase_razon` LEFT JOIN `usuarios` USING(ID_usuario)
+`usuarios`.`nombre`,
+`perfil_pases`.`nombre_perfil`
+FROM `pase_razon` LEFT JOIN `usuarios` USING(ID_usuario) LEFT JOIN `perfil_pases` USING (ID_perfil)
 WHERE DATE(fechatiempo) = '$fecha_sql'";
 $r = db_consultar($c);
 while ($f = mysql_fetch_assoc($r)) {
-    $cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["razon"],$f["cantidad"],$f["precio"],$f["pase_dias_valido"],$f["caducidad"],$f["nombre"]);
+    $cuerpo_tabla .= sprintf("<tr><td class='hora'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",$f["hora"],$f["razon"],$f["cantidad"],$f["precio"],$f["pase_dias_valido"],$f["caducidad"],$f["nombre"],$f["nombre_perfil"]);
 }
 ?>
 <h2>Motivo de generacion de pases
 <table>
-    <tr><th>Hora</th><th>Razón</th><th>Cantidad</th><th>Precio c/u</th><th>Días válidos</th><th>Caducidad</th><th>Cajero</th></tr>
+    <tr><th>Hora</th><th>Razón</th><th>Cantidad</th><th>Precio c/u</th><th>Días válidos</th><th>Caducidad</th><th>Cajero</th><th>Perfil</th></tr>
     <?php echo $cuerpo_tabla; ?>
 </table>
 <br />
